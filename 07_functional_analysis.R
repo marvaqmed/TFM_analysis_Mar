@@ -1,5 +1,3 @@
-# mar.vaquerizo@ivirma.com 
-
 # DESCRIPTION: Análisis funcional 
 # GSEA con clusterprofiler ordenando por logFC
 # Anotación con GO y KEGG
@@ -23,7 +21,7 @@ library(clusterProfiler)
 library(KEGG.db)
 
 # Funciones 
-source("../TFM/Funciones.R")
+source("Funciones_R.R")
 
 # Carpeta de resultados
 results_folder = paste0(root, "results/07_functional_analysis/")
@@ -34,13 +32,12 @@ dir.create(results_folder)
 load(paste0(root, "results/05_select_transcriptome_samples/conteos_finales_E_R.RData"), verbose = T)
 # Loading objects:
 #   pat_final_counts_filt
-#   metadata_filt
+#   metadata_pat
 
 load(paste0(root, "results/06_exploratory_and_DEA_limma/DEA_E_R.RData"), verbose = T)
 # Loading objects:
-#   final_counts
-#   pat_final_counts
-#   metadata
+#   counts_norm_remove
+#   dea_res
 
 
 # GSEA -------------------------------------------------------------------------
@@ -106,18 +103,18 @@ res_gsea_bind = rbind(res_gsea_go, res_gsea_kegg)
 write.csv(res_gsea_bind, file = paste0(results_folder, "funciones_gsea_bind_E_R.csv"))
 
 
-#### Merge con atlas funciones ####
+#### Merge con atlas funciones del grupo ####
 atlas = read.csv("data/proyectos/functional_groups_atlas.csv", row.names = F)
 res_gsea_bind$Description = tolower(res_gsea_bind$Description)
 funciones = merge(res_gsea_bind[, 1:5], atlas[, 2:ncol(atlas)], by = "Description",
                   all.x = T, all.y = F)
 write.csv(funciones, file = paste0(results_folder, "funciones_gsea_atlas.csv"))
 
-
+# Agrupamoos manualmente las funciones en el excel 
 
 # Interpretación grupos funcionales --------------------------------------------
 res_gsea_bind = read.csv("results/04_functional_analysis/funciones_gsea_bind_E_R.csv")
-grupos_funciones = read.csv("results/04_functional_analysis/funciones_E_R_agrupadas_final.csv")
+grupos_funciones = read.csv("results/07_functional_analysis/funciones_E_R_agrupadas_final.csv")
 all(grupos_funciones$Description %in% res_gsea_bind$Description)
 # TRUE 
 grupos_funciones_gsea = merge(grupos_funciones[, c("Description", "Grupos_finales")],
@@ -135,12 +132,12 @@ table(grupos_funciones_gsea$Grupos_finales, grupos_funciones_gsea$updown)
 # Estres oxidativo y detoxificacion                         17            0
 # Hormonas y señalizacion                                    1           14
 # Inflamacion e inmunidad innata                            64            0
-# Inmunidad adaptativa                                      42            0
-# Metabolismo glucidos y energia                             0           27
+# Inmunidad adaptativa                                      40            0
+# Metabolismo glucidos y energia                             0           34
 # Metabolismo lipidos                                        0           20
 # Otros                                                      4           10
 # Proteostasis y glicosilacion                               0           21
-# Regulacion de iones                                        0           34
+# Regulacion de iones                                        0           27
 # Regulacion respuesta inmune                               44            0
 # Sistema nervioso                                           0           18
 # Transporte celular                                         0           22
@@ -174,4 +171,4 @@ ggplot(toplot, aes(x=1, y = N, fill = Grupo)) +
   theme_void() + 
   scale_fill_manual(values = colores)
 
-ggsave("plots/pie_char_funciones.jpg", dpi = 500, width = 11, height = 7)
+ggsave(paste0(results_folder, "pie_char_funciones.jpg"), dpi = 500, width = 11, height = 7)

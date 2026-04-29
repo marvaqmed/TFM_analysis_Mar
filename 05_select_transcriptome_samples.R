@@ -14,11 +14,11 @@ library(readxl)
 library(ggvenn)
 
 # Funciones 
-source("../TFM/Funciones.R")
+source("Funciones_R.R")
 
 # Carpeta de resultados
-results_folder = paste0(root, "results/01_select_transcriptome_samples/")
-#dir.create(results_folder)
+results_folder = paste0(root, "results/05_select_transcriptome_samples/")
+dir.create(results_folder)
 
 # Carga de datos ---------------------------------------------------------------
 # Cargamos el excel de muestras secuenciadas
@@ -28,14 +28,13 @@ str(muestras_secuenciadas)
 rownames(muestras_secuenciadas) = paste(muestras_secuenciadas$PROJECT, muestras_secuenciadas$ID, sep = "_")
 
 # Cargamos los datos de metilación 
-load("../metilacion/results/02_exploratory_analysis/data_filtered.RData", verbose = T)
+load("results/02_exploratory_analysis/data_filtered.RData", verbose = T)
 # Loading objects:
 #   Betas
 #   ed_exp
 #   ed_pat
-load("../metilacion/results/04_reproductive_outcome/datos_E_R_Normal.RData", verbose = T)
+load("results/04_reproductive_outcome/datos_E_R_Normal.RData", verbose = T)
 # Loading objects:
-#   datos_EN
 #   sel_datos
 
 # Cargamos datos del TED 
@@ -79,7 +78,7 @@ ggvenn(x, fill_color = c("#66CDAA", "#CD9ABC"), stroke_size = 0.5,
 
 
 muestras_transcriptoma = muestras_completas$identificador
-muestras_transcriptoma_filtrado = intersect(rownames(muestras_completas), rownames(datos_EN))
+muestras_transcriptoma_filtrado = intersect(rownames(muestras_completas), rownames(sel_datos))
 
 filt_muestras_pat = muestras_completas[muestras_transcriptoma_filtrado, ]
 
@@ -173,8 +172,8 @@ colnames(sel2_counts_ENC) = c("ENC_R9", "ENC_Bi34", "ENC_R49",
                               "EA_V1")
 
 
-#### RC ####
-# De RC hay varias porciones de cada paciente
+#### Controles ####
+# De controles hay varias porciones de cada paciente
 # Para seleccionar cargamos info experimental 
 experimental_RC = read.csv(paste0(root, "data/proyectos/Experimental_ReproCycle.csv"), header = T)
 
@@ -245,8 +244,8 @@ metadata$g_paciente = factor(ifelse(startsWith(metadata$id_trans, "RC"), "contro
 
 # Envejecidas vs rejuvenecidas 
 rownames(metadata) = metadata$id_met
-sel_datos_EN = datos_EN[metadata$id_met, ]
-metadata$g_acc = factor(sel_datos_EN$g_acc, 
+sub_sel_datos = sel_datos[metadata$id_met, ]
+metadata$g_acc = factor(sub_sel_datos$g_acc, 
                          levels = c("E", "R", "Normal"))
 
 

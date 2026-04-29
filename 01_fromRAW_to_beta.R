@@ -31,7 +31,7 @@ library("IlluminaHumanMethylationEPICv2manifest")
 library("IlluminaHumanMethylationEPICv2anno.20a1.hg38")
 
 # Funciones 
-source("../TFM/Funciones.R")
+source("Funciones_R.R")
 
 # Carpeta de resultados
 results_folder = paste0(root, "results/01_fromRAW_to_beta/")
@@ -47,10 +47,10 @@ samps1 = read.delim(paste0(data_folder, "data/RUN1/RUN1_sampleSheet.csv"),
 # RUN2
 samps2 = read.delim(paste0(data_folder, "data/RUN2/RUN2_sampleSheet.csv"), 
                     sep = ",", as.is = T, skip = 7)
-#RUN 3
+# RUN3
 samps3 = read.delim(paste0(data_folder, "data/RUN3/RUN3_sampleSheet.csv"), 
                     sep = ",", as.is = T, skip = 7)
-# #RUN 4
+# RUN4
 samps4 = read.delim(paste0(data_folder, "data/RUN4/RUN4_sampleSheet.csv"), 
                     sep = ",", as.is = T, skip = 7)
 
@@ -130,9 +130,11 @@ dat2 = preprocessRaw(dat)
 dat_QC = minfiQC(dat2, fixOutliers = FALSE, verbose = TRUE)
 qc <- as.data.frame(getQC(dat2))
 plotQC(qc)
+ggsave(paste0(results_folder, "qc_plot.jpg"), dpi = 500)
 
 # QC minfi: Densidad de los valores Beta de cada muestra
 densityPlot(dat2, sampGroups = ed$Sample_Group)
+ggsave(paste0(results_folder, "density_plot.jpg"), dpi = 500)
 
 # En el RUN4  hay una muestra que se va, vamos a intentar ver cual es
 ed$fila = gsub("C01", "", ed$Array)
@@ -184,6 +186,7 @@ plots = lapply(thresholds$variable, function(x){
   
 })
 do.call("grid.arrange", c(plots, ncol = 3))
+ggsave(paste0(results_folder, "plot_ewastools.jpg"), dpi = 500)
 
 # En el RUN 3 hay una muestra que se va en BCII --> PAT_132 la quitamos 
 toplot = data.frame(values = all_metrics[, "Bisulfite Conversion II (Bkg)"],
@@ -206,6 +209,7 @@ ggplot(toplot, aes(x=values, y=aux.y, color = color, label = sample_name))+
         legend.text = element_text(size = 10),
         legend.title = element_blank()
         )
+ggsave(paste0(results_folder, "ewastools_bii_bkg.jpg"), dpi = 500)
 
 # Cálculo valores Beta ---------------------------------------------------------
 # Se obtienen los valores Beta a partir de los iDATs
@@ -254,16 +258,16 @@ colnames(datBetas_sinDup) = ed[colnames(datBetas_sinDup), "Sample_Name"]
 # PATIENT CLINICAL INFO --------------------------------------------------------
 #Cargamos el excel con los datos clinicos de cada RUN
 
-# RUN 1 
+# RUN1 
 ed_pat1 = read.delim(paste0(root, "data/RUNS/RUN_1_METH_DATOS_CLINICOS.csv"),
                        sep = ",", as.is = T, row.names = 1) 
-# RUN 2 
+# RUN2 
 ed_pat2 = read.delim(paste0(root, "data/RUNS/RUN_2_METH_DATOS_CLINICOS.csv"),
                        sep = ",", as.is = T, row.names = 1) 
-# RUN 3
+# RUN3
 ed_pat3 = read.delim(paste0(root, "data/RUNS/RUN_3_METH_DATOS_CLINICOS.csv"),
                        sep = ",", as.is = T, row.names = 1) 
-# RUN 4 
+# RUN4 
 ed_pat4 = read.delim(paste0(root, "data/RUNS/RUN_4_METH_DATOS_CLINICOS.csv"),
                        sep = ",", as.is = T, row.names = 1) 
 
@@ -300,16 +304,16 @@ ed_pat = ed_pat[colnames(datBetas_sinDup), ]
 
 # PATIENT EXPERIMENTAL INFO ----------------------------------------------------
 # Cargamos el excel con los datos experimentales de la extracción de DNA de cada RUN
-# RUN 1
+# RUN1
 ed_exp1 =  read.delim(paste0(root, "data/RUNS/RUN_1_METH_EXPERIMENTAL.csv"), 
                       sep = ",", as.is = T, row.names = 1)
-# RUN 2
+# RUN2
 ed_exp2 =  read.delim(paste0(root, "data/RUNS/RUN_2_METH_EXPERIMENTAL.csv"), 
                       sep = ",", as.is = T, row.names = 1)
-# RUN 3
+# RUN3
 ed_exp3 =  read.delim(paste0(root, "data/RUNS/RUN_3_METH_EXPERIMENTAL.csv"), 
                       sep = ",", as.is = T, row.names = 1)
-# RUN 4
+# RUN4
 ed_exp4 =  read.delim(paste0(root, "data/RUNS/RUN_4_METH_EXPERIMENTAL.csv"), 
                       sep = ",", as.is = T, row.names = 1)
 

@@ -23,7 +23,7 @@ library(FactoMineR)
 library(tibble)
 
 # Funciones 
-source("../TFM/Funciones.R")
+source("Funciones_R.R")
 
 # Carpeta de resultados
 results_folder = paste0(root, "results/02_exploratory_analysis/")
@@ -68,6 +68,8 @@ plot_PCAscores(dat = datBetas2pcas, ed = ed_exp, condition1 = "control") +
         axis.title = element_text(size=15),
         legend.text = element_text(size = 15), 
         plot.title = element_text(size=15, hjust = 0.5)) 
+
+ggsave(paste0(results_folder, "pca_controles_metil.jpg"), dpi = 500)
 
 
 # Eliminamos los controles 
@@ -125,6 +127,8 @@ ggplot(pca_scores, aes(x = Dim.1, y = Dim.2)) +
         legend.position = "none", 
         plot.title = element_text(size=20, hjust = 0.5))
   
+ggsave(paste0(results_folder, "pca_outliers.jpg"), dpi = 500)
+
 
 # Eliminamos outliers
 outliers = c("PAT_41")
@@ -314,6 +318,7 @@ ggplot(data = toplot[toplot$color!="inter",], aes(x=class, y = WC, fill = color)
   theme(x.axis.angle = 45) +
   ggtitle('Analisis PVCA')
 
+ggsave(paste0(results_folder, "plot_pvca.jpg"), dpi = 500)
 
 # Tabla demográfica  ------------------------------------------------------
 

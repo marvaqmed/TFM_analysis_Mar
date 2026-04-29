@@ -1,4 +1,5 @@
 # DESCRIPCIÓN: 
+# Comparar demográfica y clínicamente los dos grupos definidos
 # Estudiar resultados reproductivos en función de la edad y la aceleración 
 # en pacientes FIV
 
@@ -19,7 +20,7 @@ library(VGAM)
 library(dplyr)
 
 # Funciones 
-source("../TFM/Funciones.R")
+source("Funciones_R.R")
 
 # Carpeta de resultados
 results_folder = paste0(root, "results/04_reproductive_outcome/")
@@ -28,32 +29,31 @@ dir.create(results_folder)
 
 # Carga de datos ---------------------------------------------------------------
 
-load(paste0(root, "results/02_exploratory_analysis/data_filtered.RData"), verbose =T)
-# Loading objects:
-#   Betas
-#   ed_exp
-#   ed_pat
+# load(paste0(root, "results/02_exploratory_analysis/data_filtered.RData"), verbose =T)
+# # Loading objects:
+# #   Betas
+# #   ed_exp
+# #   ed_pat
 load(paste0(root, "results/03_biological_age_analysis/bioage.RData"), verbose = T)
 # Loading objects:
 #  bioage_c
 #  bioage_pat
-#  filt_bioage_c
-#  filt_bioage_pat
+#  ed_pat_pat
 
-#### Separar datos controles y pacientes ####
-control = rownames(ed_pat[ed_pat$STUDY == 'REPROCYCLE', ])
-length(control)
-# 19
-
-# Seleccionar solo la info de controles
-betas_c = Betas[, control]
-ed_pat_c = ed_pat[control, ]
-ed_exp_c = ed_exp[control,]
-
-# Seleccionar la info de las pacientes (!control)
-betas_pat = Betas[, !colnames(Betas)%in%control]
-ed_pat_pat = ed_pat[!rownames(ed_pat)%in%control, ]
-ed_exp_pat = ed_exp[!rownames(ed_exp)%in%control, ]
+# #### Separar datos controles y pacientes ####
+# control = rownames(ed_pat[ed_pat$STUDY == 'REPROCYCLE', ])
+# length(control)
+# # 19
+# 
+# # Seleccionar solo la info de controles
+# betas_c = Betas[, control]
+# ed_pat_c = ed_pat[control, ]
+# ed_exp_c = ed_exp[control,]
+# 
+# # Seleccionar la info de las pacientes (!control)
+# betas_pat = Betas[, !colnames(Betas)%in%control]
+# ed_pat_pat = ed_pat[!rownames(ed_pat)%in%control, ]
+# ed_exp_pat = ed_exp[!rownames(ed_exp)%in%control, ]
 
 
 # Filtrado de datos ------------------------------------------------------------
@@ -119,78 +119,7 @@ dim(bioage2_pat)
 # 110 12
 
 
-# Exploración  -----------------------------------------------------------------
-
-#### Correlación controles y pacientes #### 
-# Representación gráfica
-toplot <- data.frame(
-  cronologica = c(ed_pat_c$AGE2, ed2_pat_pat$AGE2),
-  biologica = c(filt_bioage_c$EN, filt2_bioage_pat$EN),
-  pacientes = factor(c(rep("Control", nrow(ed_pat_c)),
-                       rep("Pacientes", nrow(ed2_pat_pat)))))
-lims = c(min(toplot[, c("cronologica", "biologica")], na.rm = T), max(toplot[, c("cronologica", "biologica")], na.rm = T))
-ggplot(toplot, aes(x=cronologica, y=biologica, color = pacientes)) + 
-  geom_point(alpha = 0.4, size = 2) +
-  geom_smooth(method = "lm", se = F) +
-  scale_color_manual(values = c("blue", "#FF7F50")) +
-  xlab("Chronological Age") +
-  ylab("Biological Age") +
-  geom_abline(intercept = 0, linetype = 2, color = "darkgrey")+
-  default_theme()+ 
-  theme(plot.title = element_text(hjust=0.5),
-        legend.position = "right") +
-  coord_equal(xlim = lims, ylim = lims)
-
-# Correlación 
-cor.test(ed_pat_c$AGE2, filt_bioage_c$EN)
-# 0.9537
-cor.test(ed2_pat_pat$AGE2, filt2_bioage_pat$EN)
-# 0.676
-
-
-#### Ajuste modelo con controles EN #### 
-datos_EN = cbind(filt2_bioage_pat[, c("EN")], ed2_pat_pat)
-colnames(datos_EN)[1] = "EN"
-# lm controles
-lm(formula = EN ~ age, data = bioage_c)
-# interecpt = 4.488
-# pendiente = 0.907
-# y = x*0.907 + 4.488
-
-# Para cada paciente sacar valor edad control 
-# Y la aceleración respecto a la edad control
-for (i in 1:nrow(datos_EN)) {
-  datos_EN$control[i] = 0.907*(datos_EN$AGE2[i]) + 4.488
-  datos_EN$Acc2[i] = datos_EN$EN[i] - datos_EN$control[i]
-}
-
-# Estratificamos la población considerando un margen de error de +-1 año
-datos_EN$g_acc = ifelse(datos_EN$EN > datos_EN$control+1, "E", 
-                        ifelse(datos_EN$EN < datos_EN$control-1, "R", "Normal"))
-table(datos_EN$g_acc)
-#  E++   Normal    R++ 
-#   39       29     42 
-
-# Representación gráfica
-toplot = data.frame(cronologica = datos_EN$AGE2, 
-                    biologica = datos_EN$EN)
-lims = c(min(toplot, na.rm = T), max(toplot, na.rm = T))
-toplot$accel = factor(datos_EN$g_acc, levels = c("E", "R", "Normal"))
-ggplot(toplot, aes(x=cronologica, y=biologica, color = accel))+
-  geom_point(size = 2) +
-  scale_color_manual(values = c("#B75180", "#3FBCC3", "grey")) + 
-  xlab("Edad cronológica")+
-  ylab("Edad biológica (Zhang EN)")+
-  ggtitle("")+
-  geom_abline(intercept = 4.488, slope = 0.907, linetype = 2, color = "grey25") +
-  geom_abline(intercept = 4.488 + 1, slope = 0.907, linetype = 3, color = "grey25") +
-  geom_abline(intercept = 4.488 - 1, slope = 0.907, linetype = 3, color = "grey25") +
-  default_theme() +
-  theme(plot.title = element_text(hjust=0.5), 
-        legend.position = "right", 
-        axis.title = element_text(size = 20)) + 
-  coord_equal(xlim = lims, ylim = lims)
-
+# Comparación clínica y demográfica ---------------------------------------
 
 #### Tabla demográfica #### 
 demo_dat = ed2_pat_pat[, c("AGE2", "BMI", "BUP", "TR_EMBRYO_STATE", "TR_EMBRYO_QUALITY", 
@@ -203,16 +132,14 @@ demo_dat$TR_CYCLE_TYPE = factor(ifelse(demo_dat$TR_CYCLE_TYPE == "Natural", "Nat
                                 levels = c("Natural", "HRT"))
 demo_dat$g_acc = datos_EN$g_acc
 tabla = demographic_table(demo_dat, demo_dat$g_acc)
-#write.csv(tabla, file = paste0(results_folder, "tabla_demografica_E_vs_R.csv"))
-
-
+write.csv(tabla, file = paste0(results_folder, "tabla_demografica_E_vs_R.csv"))
 
 
 # Asociación con resultados reproductivos --------------------------------------
 
 # Seleccionamos solo la información de envejecidas y rejuvenecidas
-# NO tenemos en cuenta las pacientes cuya aceleración está en el rango
-sel_datos = datos_EN[datos_EN$g_acc != "Normal", ]
+# NO tenemos en cuenta las pacientes cuya aceleración está en el rango +-1
+sel_datos = ed2_pat_pat[ed2_pat_pat$g_acc != "Normal", ]
 
 #### Tasas reproductivas ####
 tasas = rbind(LBR1 = data.frame(Envejecida = sum(sel_datos$outcome[sel_datos$g_acc == "E"] == "LB")/sum(sel_datos$g_acc == "E"),
@@ -269,16 +196,11 @@ ggplot(toplot2, aes(x = Acceleration, y = value, fill = Outcome))+
   geom_bar(stat= "identity") +
   scale_fill_manual(values = c("#42BA97", "#E6B729", "#EA6312")) +
   default_theme()
+ggsave(paste0(results_folder, "tasas_reproductivas.jpg"), dpi = 500)
 
-
-pvals = do.call("rbind", lapply(grupos, function(x){
-  res = fisher.test(table(x, datos_EN$group_accel))
-  data.frame(p_value = res$p.value)
-}))
-pvals
 
 
 # Save --------------------------------------------------------------------
 
-save(datos_EN, sel_datos, file = paste0(results_folder, "datos_E_R.RData"))
+save(sel_datos, file = paste0(results_folder, "datos_E_R.RData"))
 

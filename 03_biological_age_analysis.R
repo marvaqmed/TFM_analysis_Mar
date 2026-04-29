@@ -1,5 +1,5 @@
 # DESCRIPCIÓN: 
-# Predecir la edad biológica del grupo control y de pacientes FIV
+# Estimar la edad biológica del grupo control y de pacientes FIV
 # Representación de edad biológica frente a edad cronológica 
 # Cálculo aceleraciones
 
@@ -19,7 +19,7 @@ library(methylclock)
 library(VGAM)
 
 # Funciones 
-source("../TFM/Funciones.R")
+source("Funciones_R.R")
 
 # Capeta de resultados
 results_folder = paste0(root, "results/03_biological_age_analysis/")
@@ -150,6 +150,7 @@ plots = lapply(colnames(filt_bioage_c), function(x){
 })
 do.call("grid.arrange", c(plots, ncol = 4))
 
+ggsave(paste0(results_folder, "plots_controles.jpg"), dpi = 500)
 
 #### Análisis de correlación ####
 corrs = do.call("rbind", lapply(colnames(filt_bioage_c), function(x){
@@ -159,6 +160,11 @@ corrs = do.call("rbind", lapply(colnames(filt_bioage_c), function(x){
 }))
 rownames(corrs) = colnames(filt_bioage_c)
 corrs
+#          correlation      p_value
+# Horvath    0.7646908 1.372159e-04
+# BLUP       0.8985316 1.745236e-07
+# EN         0.9536538 2.704041e-10
+# AltumAge   0.7892321 5.890655e-05
 
 # Media correlación controles 
 mean(corrs$correlation)
@@ -183,15 +189,34 @@ cor_plots = lapply(colnames(filt_bioage_c), function(x){
 })
 do.call("grid.arrange", c(cor_plots, ncol = 4))
 
+ggsave(paste0(results_folder, "plots_controles_corr.jpg"), dpi = 500)
 
-# Análisis edad biológica pacientes ----------------------------------------
 
+#### Cálculo MAE ###
+mae_c = do.call("rbind", lapply(c("Horvath", "BLUP", "EN", "AltumAge"), function(x){
+  diff = mean(abs(bioage_c[, x] - bioage_c$age))
+  data.frame(mae = diff)
+}))
+rownames(mae_c) = c("Horvath", "BLUP", "EN", "AltumAge")
+mae_c
+#                mae
+# Horvath   6.094583
+# BLUP     14.990120
+# EN        1.751881
+# AltumAge 10.353524
+
+# Seleccionamos el reloj Zhang EN 
+
+# Análisis edad biológica pacientes --------------------------------------------
+
+# Aunque hemos seleccionado el reloj Zhang EN probamos el resto de relojes
 # Seleccionamos solo las columnas de los relojes
 filt_bioage_pat = bioage_pat[, c("Horvath", "BLUP", "EN", "AltumAge")]
 
 #### Edad biológica vs edad cronológica #### 
 plots = lapply(colnames(filt_bioage_pat), function(x){
-  toplot = data.frame(cronologica = ed_pat_pat$AGE2, biologica = filt_bioage_pat[, x])
+  toplot = data.frame(cronologica = ed_pat_pat$AGE2, 
+                      biologica = filt_bioage_pat[, x])
   lims = c(min(toplot, na.rm = T), max(toplot, na.rm = T))
   ggplot(toplot, aes(x=cronologica, y=biologica))+
     geom_point(alpha = 0.6)+
@@ -206,6 +231,7 @@ plots = lapply(colnames(filt_bioage_pat), function(x){
 })
 do.call("grid.arrange", c(plots, ncol = 4))
 
+ggsave(paste0(results_folder, "plots_pacientes.jpg"), dpi = 500)
 
 #### Análisis de correlación ####
 corrs = do.call("rbind", lapply(colnames(filt_bioage_pat), function(x){
@@ -222,7 +248,8 @@ mean(corrs$correlation)
 
 #Aquí se dibuja la linea de correlacion en las gráficas para poder visualizarla
 cor_plots = lapply(colnames(filt_bioage_pat), function(x){
-  toplot = data.frame(cronologica = ed_pat_pat$AGE2, biologica = filt_bioage_pat[, x])
+  toplot = data.frame(cronologica = ed_pat_pat$AGE2, 
+                      biologica = filt_bioage_pat[, x])
   lims = c(min(toplot), max(toplot))
   ggplot(toplot, aes(x=cronologica, y=biologica))+
     geom_point(alpha = 0.5)+
@@ -237,6 +264,21 @@ cor_plots = lapply(colnames(filt_bioage_pat), function(x){
     coord_equal(xlim = lims, ylim = lims)
 })
 do.call("grid.arrange", c(cor_plots, ncol = 4))
+
+ggsave(paste0(results_folder, "plots_pacientes_corr.jpg"), dpi = 500)
+
+#### Cálculo MAE ###
+mae_pat = do.call("rbind", lapply(c("Horvath", "BLUP", "EN", "AltumAge"), function(x){
+  diff = mean(abs(bioage_pat[, x] - bioage_pat$age))
+  data.frame(mae = diff)
+}))
+rownames(mae_pat) = c("Horvath", "BLUP", "EN", "AltumAge")
+mae_pat
+#                mae
+# Horvath   5.754229
+# BLUP     15.778835
+# EN        2.520933
+# AltumAge  7.719855
 
 
 # Pactientes FIV frente a controles --------------------------------------------
@@ -262,8 +304,61 @@ ggplot(toplot, aes(x=cronologica, y=biologica, color = pacientes)) +
         legend.position = "right") +
   coord_equal(xlim = lims, ylim = lims)
 
+ggsave(paste0(results_folder, "cruce_rectas.jpg"), dpi = 500)
+
+
+# Estratificación pacientes -----------------------------------------------
+
+
+#### Ajuste modelo con controles EN #### 
+# lm controles
+lm(formula = EN ~ age, data = bioage_c)
+# interecpt = 4.488
+# pendiente = 0.907
+# y = x*0.907 + 4.488
+
+# Para cada paciente sacar valor edad control 
+# Y la aceleración respecto a la edad control
+for (i in 1:nrow(bioage_pat)) {
+  bioage_pat$control[i] = 0.907*(bioage_pat$age[i]) + 4.488
+  bioage_pat$Acc2[i] = bioage_pat$EN[i] - bioage_pat$control[i]
+}
+
+# Estratificamos la población considerando un margen de error de +-1 año
+bioage_pat$g_acc = ifelse(bioage_pat$EN > bioage_pat$control+1, "E", 
+                        ifelse(bioage_pat$EN < bioage_pat$control-1, "R", "Normal"))
+table(bioage_pat$g_acc)
+#  E   Normal    R 
+# 53       43   54
+
+# Añadimos la estratificación a la metadata 
+all(rownames(ed_pat_pat) == rownames(bioage_pat))
+# TRUE 
+ed_pat_pat$g_acc = bioage_pat$g_acc
+
+# Representación gráfica
+toplot = data.frame(cronologica = bioage_pat$age, 
+                    biologica = bioage_pat$EN)
+lims = c(min(toplot, na.rm = T), max(toplot, na.rm = T))
+toplot$accel = factor(bioage_pat$g_acc, levels = c("E", "R", "Normal"))
+ggplot(toplot, aes(x=cronologica, y=biologica, color = accel))+
+  geom_point(size = 2) +
+  scale_color_manual(values = c("#B75180", "#3FBCC3", "grey")) + 
+  xlab("Edad cronológica")+
+  ylab("Edad biológica")+
+  ggtitle("Zhang EN")+
+  geom_abline(intercept = 4.488, slope = 0.907, linetype = 2, color = "grey25") +
+  geom_abline(intercept = 4.488 + 1, slope = 0.907, linetype = 3, color = "grey25") +
+  geom_abline(intercept = 4.488 - 1, slope = 0.907, linetype = 3, color = "grey25") +
+  default_theme() +
+  theme(plot.title = element_text(hjust=0.5), 
+        legend.position = "right", 
+        axis.title = element_text(size = 20)) + 
+  coord_equal(xlim = lims, ylim = lims)
+
+ggsave(paste0(results_folder, "estratificacion_pacientes.jpg"), dpi = 500)
 
 # Save -------------------------------------------------------------------------
 
-save(bioage_c, bioage_pat, filt_bioage_c, filt_bioage_pat, 
+save(bioage_c, bioage_pat, ed_pat_pat, 
      file = paste0(results_folder, "bioage.RData"))
