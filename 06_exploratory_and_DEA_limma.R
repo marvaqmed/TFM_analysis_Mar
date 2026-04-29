@@ -178,4 +178,4 @@ dim(sigs)
 
 save(counts_norm_remove, dea_res, file = paste0(results_folder, "DEA_E_R_limma.RData"))
 write.csv(counts_norm_remove, file = paste0(results_folder, "conteos_finales.csv"))
-
+write.csv(metadata_pat, file = paste0(results_folder, "metadata.csv"))
