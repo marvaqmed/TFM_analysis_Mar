@@ -119,6 +119,31 @@ dim(bioage2_pat)
 # 110 12
 
 
+# Estratificación pacientes tras filtros ----------------------------------
+
+# Representación gráfica
+toplot = data.frame(cronologica = datos_EN$AGE2, 
+                    biologica = datos_EN$EN)
+lims = c(min(toplot, na.rm = T), max(toplot, na.rm = T))
+toplot$accel = factor(datos_EN$g_acc, levels = c("E", "R", "Normal"))
+ggplot(toplot, aes(x=cronologica, y=biologica, color = accel))+
+  geom_point(size = 2) +
+  scale_color_manual(values = c("#B75180", "#3FBCC3", "grey")) + 
+  xlab("Edad cronológica")+
+  ylab("Edad biológica")+
+  ggtitle("Zhang EN")+
+  geom_abline(intercept = 4.488, slope = 0.907, linetype = 2, color = "grey25") +
+  geom_abline(intercept = 4.488 + 1, slope = 0.907, linetype = 3, color = "grey25") +
+  geom_abline(intercept = 4.488 - 1, slope = 0.907, linetype = 3, color = "grey25") +
+  default_theme() +
+  theme(plot.title = element_text(hjust=0.5), 
+        legend.position = "right", 
+        axis.title = element_text(size = 20)) + 
+  coord_equal(xlim = lims, ylim = lims)
+
+ggsave("/data/local/mvaquerizo/metilacion/Plots/E_vs_R_filtros.jpg", dpi = 500,
+       width = 10, height = 8)
+
 # Comparación clínica y demográfica ---------------------------------------
 
 #### Tabla demográfica #### 

@@ -1,7 +1,9 @@
 # DESCRIPCIÓN: 
 # Estimar la edad biológica del grupo control y de pacientes FIV
-# Representación de edad biológica frente a edad cronológica 
-# Cálculo aceleraciones
+# Representación de la edad biológica frente a edad cronológica 
+# Cálculo aceleraciones y diferencia de medias 
+# Cálculo recta patrón en base a controles
+# Estratificación de pacientes según aceleración epigenética relativa
 
 # Settings ----------------------------------------------------------------
 
@@ -283,7 +285,7 @@ mae_pat
 
 # Pactientes FIV frente a controles --------------------------------------------
 
-toplot <- data.frame(
+toplot = data.frame(
   cronologica = c(ed_pat_c$AGE2, ed_pat_pat$AGE2),
   biologica = c(filt_bioage_c$EN, filt_bioage_pat$EN),
   pacientes = factor(c(rep("Control", nrow(ed_pat_c)),
@@ -295,7 +297,6 @@ ggplot(toplot, aes(x=cronologica, y=biologica, color = pacientes)) +
   geom_smooth(method = "lm", se = F) +
   scale_color_manual(values = c("Control" = "#31a7f6",
                                 "Pacientes" = "#EB9050")) +
-  # scale_color_manual(values = c("blue", "#FF7F50")) +
   xlab("Chronological Age") +
   ylab("Biological Age") +
   geom_abline(intercept = 0, linetype = 2, color = "darkgrey")+
@@ -306,9 +307,128 @@ ggplot(toplot, aes(x=cronologica, y=biologica, color = pacientes)) +
 
 ggsave(paste0(results_folder, "cruce_rectas.jpg"), dpi = 500)
 
+# Edad a la que se cruzan las rectas de controles y pacientes
+# Recta controles
+lm(formula = EN ~ age, data = bioage_c)
+# y = 4.488 + 0.907x
+
+# Recta pacientes 
+lm(formula = EN ~ age, data = bioage_pat)
+# y = 15.232 + 0.639x
+
+# Punto de corte --> 40,22 años
+# y = 4.488 + 0.907x = 15.232 + 0.6399x --> 0.907x - 0.6399x = 15.232 - 4.488 --> 
+# 0.2671x = 10.744 --> x = 10.744 / 0.2671 = 40.22  
+
+
+
+#### Diferencia media cronológica y biológica ####
+
+# Cronológica controles
+mean(bioage_c$age)
+# 36.61587
+
+# Biológica controles
+mean(bioage_c$EN)
+# 37.69823
+
+# Cronológica pacientes
+mean(bioage_pat$age)
+# 40.38186
+
+# Biológica pacientes
+mean(bioage_pat$EN)
+# 41.07115
+
+# Diferencia medias controles
+mean(bioage_c$EN) - mean(bioage_c$age)
+# 1.082358
+
+# Diferencia medias pacientes 
+mean(bioage_pat$EN) - mean(bioage_pat$age)
+# 0.6892878
+
+# Determinar significancia estadística 
+# Comprobamos si siguen distribución normal 
+shapiro.test(bioage_c$age)
+# p-value = 0.2261
+shapiro.test(bioage_c$EN)
+# p-value = 0.2116
+shapiro.test(bioage_pat$age)
+# p-value = 0.2486
+shapiro.test(bioage_pat$EN)
+# p-value = 0.6237
+
+# Como todos siguen una distribución normal usamos t.test para comparar si 
+# la edad biológica es significativamente mayor que la cronológica
+t.test(bioage_c$age, bioage_c$EN, paired = T)
+# p-value = 0.03138
+t.test(bioage_pat$age, bioage_pat$EN, paired = T)
+# p-value = 0.007114
+
+
+#### Separando a los 40 años ####
+# Cronológica controles -40.22
+mean(bioage_c$age[bioage_c$age < 40.22])
+# 33.27837
+
+# Biológica controles -40.22
+mean(bioage_c$EN[bioage_c$age < 40.22])
+# 34.94852
+
+# Cronológica controles +40.22
+mean(bioage_c$age[bioage_c$age > 40.22])
+# 43.84714
+
+# Biológica controles +40.22
+mean(bioage_c$EN[bioage_c$age > 40.22])
+# 43.65594
+
+# Diferencia medias controles -40.22
+mean(bioage_c$EN[bioage_c$age < 40.22]) - mean(bioage_c$age[bioage_c$age < 40.22])
+# 1.670153
+
+# Diferencia medias controles +40.22
+mean(bioage_c$EN[bioage_c$age > 40.22]) - mean(bioage_c$age[bioage_c$age > 40.22])
+# -0.1911973
+
+t.test(bioage_c$EN[bioage_c$age < 40.22] - bioage_c$age[bioage_c$age < 40.22], 
+       bioage_c$EN[bioage_c$age > 40.22] - bioage_c$age[bioage_c$age > 40.22])
+# p-value = 0.07744
+
+
+## Pacientes 
+# Cronológica pacientes -40.22
+mean(bioage_pat$age[bioage_pat$age < 40.22])
+# 36.51837
+
+# Biológica pacientes -40.22
+mean(bioage_pat$EN[bioage_pat$age < 40.22])
+# 38.70515
+
+# Cronológica pacientes +40.22
+mean(bioage_pat$age[bioage_pat$age > 40.22])
+# 43.67298
+
+# Biológica pacientes +40.22
+mean(bioage_pat$EN[bioage_pat$age > 40.22])
+# 43.08662
+
+# Diferencia medias pacientes -40.22
+mean(bioage_pat$EN[bioage_pat$age < 40.22]) - mean(bioage_pat$age[bioage_pat$age < 40.22])
+# 2.186788
+
+# Diferencia medias pacientes +40
+mean(bioage_pat$EN[bioage_pat$age > 40.22]) - mean(bioage_pat$age[bioage_pat$age > 40.22])
+# -0.5863608
+
+t.test(bioage_pat$EN[bioage_pat$age < 40.22] - bioage_pat$age[bioage_pat$age < 40.22], 
+       bioage_pat$EN[bioage_pat$age > 40.22] - bioage_pat$age[bioage_pat$age > 40.22])
+# p-value = 7.816e-09
+
+
 
 # Estratificación pacientes -----------------------------------------------
-
 
 #### Ajuste modelo con controles EN #### 
 # lm controles
@@ -356,7 +476,8 @@ ggplot(toplot, aes(x=cronologica, y=biologica, color = accel))+
         axis.title = element_text(size = 20)) + 
   coord_equal(xlim = lims, ylim = lims)
 
-ggsave(paste0(results_folder, "estratificacion_pacientes.jpg"), dpi = 500)
+ggsave("/data/local/mvaquerizo/metilacion/Plots/E_vs_R_total.jpg", dpi = 500,
+       width = 10, height = 8)
 
 # Save -------------------------------------------------------------------------
 
