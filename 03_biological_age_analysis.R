@@ -321,7 +321,6 @@ lm(formula = EN ~ age, data = bioage_pat)
 # 0.2671x = 10.744 --> x = 10.744 / 0.2671 = 40.22  
 
 
-
 #### Diferencia media cronológica y biológica ####
 
 # Cronológica controles
