@@ -1,4 +1,5 @@
-# DESCRIPCIÓN: Análisis exploratorio de los datos con limma
+# DESCRIPCIÓN: 
+# Análisis exploratorio de los datos transcriptómicos con limma
 # Se corrige el efecto de Batch del proyecto 
 # DEA
 

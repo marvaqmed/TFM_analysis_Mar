@@ -40,21 +40,6 @@ load(paste0(root, "results/03_biological_age_analysis/bioage.RData"), verbose = 
 #  bioage_pat
 #  ed_pat_pat
 
-# #### Separar datos controles y pacientes ####
-# control = rownames(ed_pat[ed_pat$STUDY == 'REPROCYCLE', ])
-# length(control)
-# # 19
-# 
-# # Seleccionar solo la info de controles
-# betas_c = Betas[, control]
-# ed_pat_c = ed_pat[control, ]
-# ed_exp_c = ed_exp[control,]
-# 
-# # Seleccionar la info de las pacientes (!control)
-# betas_pat = Betas[, !colnames(Betas)%in%control]
-# ed_pat_pat = ed_pat[!rownames(ed_pat)%in%control, ]
-# ed_exp_pat = ed_exp[!rownames(ed_exp)%in%control, ]
-
 
 # Filtrado de datos ------------------------------------------------------------
 # Número de embriones transferidos

@@ -66,9 +66,6 @@ bioage_c = DNAmAge(x = betas_c, clocks = clocks, toBetas = F, cell.count = F,
 bioage_pat = DNAmAge(x = betas_pat, clocks = clocks, toBetas = F, cell.count = F, 
                      age = ed_pat_pat$AGE2, normalize = T)
 
-# AgeAcc: difference between DNAmAge and chronological age
-# AgeAcc2: residuals obtained after regressing chronological age and DNAmAge
-
 bioage_c = as.data.frame(bioage_c)
 bioage_pat = as.data.frame(bioage_pat)
 #Cambiamos los nombres de fila por los identificadores de muestras
@@ -321,23 +318,23 @@ lm(formula = EN ~ age, data = bioage_pat)
 # 0.2671x = 10.744 --> x = 10.744 / 0.2671 = 40.22  
 
 
-#### Diferencia media cronológica y biológica ####
+#### Diferencia edad epigenética y cronológica ####
+
+# Epigenética controles
+mean(bioage_c$EN)
+# 37.69823
 
 # Cronológica controles
 mean(bioage_c$age)
 # 36.61587
 
-# Biológica controles
-mean(bioage_c$EN)
-# 37.69823
+# Epigenética pacientes
+mean(bioage_pat$EN)
+# 41.07115
 
 # Cronológica pacientes
 mean(bioage_pat$age)
 # 40.38186
-
-# Biológica pacientes
-mean(bioage_pat$EN)
-# 41.07115
 
 # Diferencia medias controles
 mean(bioage_c$EN) - mean(bioage_c$age)
@@ -347,7 +344,7 @@ mean(bioage_c$EN) - mean(bioage_c$age)
 mean(bioage_pat$EN) - mean(bioage_pat$age)
 # 0.6892878
 
-# Determinar significancia estadística 
+## Determinar significancia estadística 
 # Comprobamos si siguen distribución normal 
 shapiro.test(bioage_c$age)
 # p-value = 0.2261
@@ -359,70 +356,129 @@ shapiro.test(bioage_pat$EN)
 # p-value = 0.6237
 
 # Como todos siguen una distribución normal usamos t.test para comparar si 
-# la edad biológica es significativamente mayor que la cronológica
-t.test(bioage_c$age, bioage_c$EN, paired = T)
+# la edad epigenética es significativamente mayor que la cronológica
+t.test(bioage_c$EN, bioage_c$age, paired = T)
 # p-value = 0.03138
-t.test(bioage_pat$age, bioage_pat$EN, paired = T)
+t.test(bioage_pat$EN, bioage_pat$age, paired = T)
 # p-value = 0.007114
 
 
 #### Separando a los 40 años ####
-# Cronológica controles -40.22
-mean(bioage_c$age[bioage_c$age < 40.22])
-# 33.27837
+## Controles menos de 40,22 años
+table(bioage_c$age < 40.22)
+# FALSE  TRUE 
+#     6    13
 
-# Biológica controles -40.22
+# Epigenética controles -40.22
 mean(bioage_c$EN[bioage_c$age < 40.22])
 # 34.94852
 
-# Cronológica controles +40.22
-mean(bioage_c$age[bioage_c$age > 40.22])
-# 43.84714
-
-# Biológica controles +40.22
-mean(bioage_c$EN[bioage_c$age > 40.22])
-# 43.65594
+# Cronológica controles -40.22
+mean(bioage_c$age[bioage_c$age < 40.22])
+# 33.27837
 
 # Diferencia medias controles -40.22
 mean(bioage_c$EN[bioage_c$age < 40.22]) - mean(bioage_c$age[bioage_c$age < 40.22])
 # 1.670153
 
+# Significatividad 
+t.test(bioage_c$EN[bioage_c$age < 40.22], bioage_c$age[bioage_c$age < 40.22], paired = T)
+# p-value = 0.006702
+
+## Controles mayores de 40,22 años
+# Epigenética controles +40.22
+mean(bioage_c$EN[bioage_c$age > 40.22])
+# 43.65594
+
+# Cronológica controles +40.22
+mean(bioage_c$age[bioage_c$age > 40.22])
+# 43.84714
+
 # Diferencia medias controles +40.22
 mean(bioage_c$EN[bioage_c$age > 40.22]) - mean(bioage_c$age[bioage_c$age > 40.22])
 # -0.1911973
 
-t.test(bioage_c$EN[bioage_c$age < 40.22] - bioage_c$age[bioage_c$age < 40.22], 
-       bioage_c$EN[bioage_c$age > 40.22] - bioage_c$age[bioage_c$age > 40.22])
-# p-value = 0.07744
+# Significatividad 
+t.test(bioage_c$EN[bioage_c$age > 40.22], bioage_c$age[bioage_c$age > 40.22], paired = T)
+# p-value = 0.8179
 
 
-## Pacientes 
-# Cronológica pacientes -40.22
-mean(bioage_pat$age[bioage_pat$age < 40.22])
-# 36.51837
+## Pacientes menores de 40,22 años
+table(bioage_pat$age < 40.22)
+# FALSE  TRUE 
+#    81    69 
 
-# Biológica pacientes -40.22
+# Epigenética pacientes -40.22
 mean(bioage_pat$EN[bioage_pat$age < 40.22])
 # 38.70515
 
-# Cronológica pacientes +40.22
-mean(bioage_pat$age[bioage_pat$age > 40.22])
-# 43.67298
-
-# Biológica pacientes +40.22
-mean(bioage_pat$EN[bioage_pat$age > 40.22])
-# 43.08662
+# Cronológica pacientes -40.22
+mean(bioage_pat$age[bioage_pat$age < 40.22])
+# 36.51837
 
 # Diferencia medias pacientes -40.22
 mean(bioage_pat$EN[bioage_pat$age < 40.22]) - mean(bioage_pat$age[bioage_pat$age < 40.22])
 # 2.186788
 
+# Significatividad 
+t.test(bioage_pat$EN[bioage_pat$age < 40.22], bioage_pat$age[bioage_pat$age < 40.22], paired = T)
+# p-value = p-value = 3.986e-09
+
+
+## Pacientes mayores de 40,22 años
+# Epigenética pacientes +40.22
+mean(bioage_pat$EN[bioage_pat$age > 40.22])
+# 43.08662
+
+# Cronológica pacientes +40.22
+mean(bioage_pat$age[bioage_pat$age > 40.22])
+# 43.67298
+
 # Diferencia medias pacientes +40
 mean(bioage_pat$EN[bioage_pat$age > 40.22]) - mean(bioage_pat$age[bioage_pat$age > 40.22])
 # -0.5863608
 
-t.test(bioage_pat$EN[bioage_pat$age < 40.22] - bioage_pat$age[bioage_pat$age < 40.22], 
-       bioage_pat$EN[bioage_pat$age > 40.22] - bioage_pat$age[bioage_pat$age > 40.22])
+# Significatividad 
+t.test(bioage_pat$EN[bioage_pat$age > 40.22], bioage_pat$age[bioage_pat$age > 40.22], paired = T)
+# p-value = 0.06712
+
+
+
+# Para ver si las diferencias entre mayores y menores de 40,22 años son significativas
+# calculamos la diferencia entre epigenética y cronológica para cada mujer en ambos grupos y los comparamos 
+
+## Controles 
+# Diferencia de edades 
+bioage_c$diff_age = bioage_c$EN - bioage_c$age
+
+# Media diferencias en <40.22 años
+mean(bioage_c$diff_age[bioage_c$age < 40.22])
+# 1.670153
+
+# Media diferencias en >40.22 años 
+mean(bioage_c$diff_age[bioage_c$age > 40.22])
+# -0.1911973
+
+# Significatividad 
+t.test(bioage_c$diff_age[bioage_c$age < 40.22], bioage_c$diff_age[bioage_c$age > 40.22])
+# p-value = 0.07744
+
+
+
+# Pacientes 
+# Diferencia de edades 
+bioage_pat$diff_age = bioage_pat$EN - bioage_pat$age
+
+# Media diferencias en <40.22 años
+mean(bioage_pat$diff_age[bioage_pat$age < 40.22])
+# 2.186788
+
+# Media diferencias en >40.22 años 
+mean(bioage_pat$diff_age[bioage_pat$age > 40.22])
+# -0.5863608
+
+# Significatividad 
+t.test(bioage_pat$diff_age[bioage_pat$age < 40.22], bioage_pat$diff_age[bioage_pat$age > 40.22])
 # p-value = 7.816e-09
 
 
