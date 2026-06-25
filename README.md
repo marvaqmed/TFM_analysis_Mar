@@ -8,7 +8,7 @@ Todos los análisis se han realizado combinando los entornos de programación R 
 Tras el procesamiento y control de calidad de los datos de metilación, se estimó la edad biológica endometrial mediante distintos relojes epigenéticos. En concreto, los relojes de Horvath, Zhang EN y Zhang BLUP fueron implementados en R, mientras que el reloj AltumAge fue aplicado en Python. 
 Posteriormente, la cohorte de pacientes fue estratificada en base a la aceleración epigenética relativa y los grupos obtenidos fueron caracterizados clínica y funcionalmente. Para esto último, se integraron datos transcriptómicos obtenidos mediante RNA-seq, los cuales fueron procesados y normalizados previamente.
 A continuación, se llevó a cabo un análisis de expresión diferencial utilizando el paquete limma, seguido de un análisis de enriquecimiento de conjunto de genes utilizando la anotación funcional de las bases de datos GeneOntology (GO) y Kyoto Encyclopedia of Genes and Genomes (KEGG). 
-Finalmente, se aplicaron modelos de modelos de aprendizaje automático en Python para la identificación de una firma transcriptómica asociada al envejecimiento epigenético endometrial. 
+Finalmente, se aplicaron modelos de modelos de aprendizaje automático en Python para la identificación de biomarcadores asociados al envejecimiento epigenético endometrial. 
 
 --- 
 ## Organización del repositorio 
@@ -45,7 +45,7 @@ Finalmente, se aplicaron modelos de modelos de aprendizaje automático en Python
 │   └── Análisis funcional mediante GSEA y anotación con GO y KEGG.
 │
 ├── 08_gene_signature.ipynb            
-│   └── Identificación de una firma génica asociada a envejecimiento epigenético endometrial mediante la aplicación de modelos de aprendizaje automático.
+│   └── Identificación de biomarcadores asociados a envejecimiento epigenético endometrial mediante la aplicación de modelos de aprendizaje automático.
 │
 ├── Funciones_R.R                      
 │   └── Funciones auxiliares utilizadas en R.
